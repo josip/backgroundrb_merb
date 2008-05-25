@@ -1,40 +1,72 @@
-namespace :backgroundrb do
+namespace :bdrb do
   require 'yaml'
-  
-  desc 'Setup backgroundrb in your rails application'
-  task :setup do
-    script_dest = "#{Merb.root}/script/backgroundrb"
-    script_src = File.dirname(__FILE__) + "/../../script/backgroundrb"
 
-    FileUtils.chmod 0774, script_src
+  desc 'Control BackgrounDRb server'
+  # Or 'clt'?
+  namespace :ctl do
+    # Load BDRb files
+    bdrb_dir = Merb.root / "gems" / "gems" / "backgroundrb_merb-1.0.3"
+    $LOAD_PATH.unshift(bdrb_dir)
+    $LOAD_PATH.unshift(bdrb_dir / "lib" / "backgroundrb_merb")
+    $LOAD_PATH.unshift(bdrb_dir / "server" / "lib")
 
-    defaults = {:backgroundrb => {:ip => '0.0.0.0',:port => 11006 } }
+    # Load workers
+    WORKER_ROOT = Merb.root / "app" / "workers"
+    $LOAD_PATH.unshift(WORKER_ROOT)
 
-    config_dest = "#{Merb.root}/config/backgroundrb.yml"
+    require 'packet'
+    require 'bdrb_config.rb'
+    require 'master_worker.rb'
+    require 'meta_worker.rb'
 
-    unless File.exists?(config_dest)
-        puts "Copying backgroundrb.yml config file to #{config_dest}"
-        File.open(config_dest, 'w') { |f| f.write(YAML.dump(defaults)) }
+#     BackgrounDRbMerb::Config.parse_cmd_options(ARGV[1..-1])
+    CONFIG_FILE = BackgrounDRbMerb::Config.read_config(Merb.root / "config" / "backgroundrb.yml")
+    bdrb_conf = CONFIG_FILE[:backgroundrb]
+    pid_file = bdrb_dir / "pids" / "drb_#{bdrb_conf[:port]}.pid"
+    SERVER_LOGGER = Merb.root / "log" / "bdrb_server_#{bdrb_conf[:port]}.log"
+
+
+    desc 'Start and detach from console'
+    task :daemonize do
+      if fork then
+        exit
+      else
+        File.open(pid_file, 'w') {|f| f << Process.pid.to_s}
+        if bdrb_conf[:log].nil? or bdrb_conf[:log] != 'foreground' then
+          log_file = File.open(SERVER_LOGGER, 'w+')
+          [STDIN, STDOUT, STDERR].each {|dev| dev.reopen(log_file)}
+        end
+
+        BackgrounDRbMerb::MasterProxy.new
+      end
+      exit
     end
 
-    unless File.exists?(script_dest)
-        puts "Copying backgroundrb script to #{script_dest}"
-        FileUtils.cp_r(script_src, script_dest)
+    desc 'Stop BackgrounDRb'
+    task :stop do
+      pid = nil
+      File.open(pid_file, 'r') {|f| pid = f.gets.strip.chomp.to_i}
+      begin
+        pgid = Process.getpgid(pid)
+        Process.kill('TERM', pid)
+        Process.kill('-TERM', pgid)
+        Process.kill('KILL', pid)
+      rescue Errno::ESRCH => e
+        puts "Deleting pid file"
+      rescue
+        puts $!
+      ensure
+        File.delete(pid_file) if File.exists?(pid_file)
+      end
+      exit
     end
 
-    workers_dest = "#{Merb.root}/lib/workers"
-    unless File.exists?(workers_dest)
-      puts "Creating #{workers_dest}"
-      FileUtils.mkdir(workers_dest)
+    desc 'Start BackgrounDRb'
+    task :start do
+      BackgrounDRbMerb::MasterProxy.new
     end
 
-    # Commented out as no test in MERB, only rspec
-    #test_helper_dest = "#{Merb.root}/test/bdrb_test_helper.rb"
-    #test_helper_src = File.dirname(__FILE__) + "/../../script/bdrb_test_helper.rb"
-    #unless File.exists?(test_helper_dest)
-    #  puts "Copying Worker Test helper file #{test_helper_dest}"
-    #  FileUtils.cp_r(test_helper_src,test_helper_dest)
-    #end
+#     exit # To avoid "don't know how to build task start/stop"
   end
 
   desc 'Remove backgroundrb from your rails application'
@@ -52,7 +84,7 @@ namespace :backgroundrb do
     #  FileUtils.rm(test_helper_src,:force => true)
     #end
 
-    workers_dest = "#{Merb.root}/lib/workers"
+    workers_dest = "#{Merb.root}/app/workers"
     if File.exists?(workers_dest) && Dir.entries("#{workers_dest}").size == 2
         puts "#{workers_dest} is empty...deleting!"
         FileUtils.rmdir(workers_dest)

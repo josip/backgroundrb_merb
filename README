@@ -1,8 +1,35 @@
+= Why double fork?
+Well, to original fork didn't work for me...
+
 = Merb fork of BackgrounDRb
 Based on the 1.0.3 version of backgroundrb this is a hacked port to MERB.  Some areas need tyding up but it works for all basic cases.  Contributions welcome!
 
-= BackgrounDRb
+== Installation
+  (1) Install gem provided in /pkg into your app's gem repository (which has to be named gems)
+      ex. #cd ~/path/to/app
+          #mkdir gems
+          #gem install ~/path/to/bdrb_merb.pkg -i gems --no-ri --no-rdoc -l
+  (2) Create blank config/backgroundrb.yml file
+  (3) Generate new worker, so that you get correct backgroundrb.yml file
+        #cd ~/pat/to/app
+        #merb-gen worker Test
+        (You whish to overwrite config/backgroundrb.yml)
+        #rm app/workers/test_worker.rb
+        #rm spec/workers/test.rb
+== Usage
+  Workers are created in app/workers
+  To create new worker:
+    merb-gen worker WorkerName
 
+  To start BackgroundRB:
+    rake bdrb:ctl:start
+    Control+C to stop
+  To run in background:
+    rake bdrb:ctl:daemonize
+  And to stop it:
+    rake bdrb:ctl:stop
+
+= BackgrounDRb
 BackgrounDRb is a Ruby job server and scheduler. Its main intent is to be
 used with Ruby on Rails applications for offloading long-running tasks.
 Since a Rails application blocks while serving a request it is best to
@@ -12,7 +39,6 @@ from http request/response cycle.
 This new release of BackgrounDRb is also modular and can be used without Rails so that any Ruby program or framework can use it.
 
 Copyright (c) 2006 Ezra Zygmuntowicz,skaar[at]waste[dot]org,
-
 Copyright (c) 2007 Hemant Kumar (gethemant [at] gmail.com )
 
 

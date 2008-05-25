@@ -163,18 +163,18 @@ module BackgrounDRbMerb
     attr_accessor :logger, :thread_pool
     iattr_accessor :pool_size
     iattr_accessor :reload_flag
-    
+
     @pool_size = nil
     @reload_flag = false
-    
+
     def self.pool_size(size = nil)
       @pool_size = size if size
       @pool_size
     end
-    
+
     def self.reload_on_schedule(flag = nil)
       if flag
-        self.no_auto_load = true 
+        self.no_auto_load = true
         self.reload_flag = true
       end
     end
@@ -290,7 +290,7 @@ module BackgrounDRbMerb
     def send_response input,output
       input[:data] = output
       input[:type] = :response
-      
+
       begin
         send_data(input)
       rescue TypeError => e
@@ -321,7 +321,7 @@ module BackgrounDRbMerb
 
       return if @worker_method_triggers.nil? or @worker_method_triggers.empty?
       @worker_method_triggers.delete_if { |key,value| value[:trigger].respond_to?(:end_time) && value[:trigger].end_time <= Time.now }
-      
+
       @worker_method_triggers.each do |key,value|
         time_now = Time.now.to_i
         if value[:runtime] < time_now
@@ -343,13 +343,18 @@ module BackgrounDRbMerb
     def run_user_threads
       @thread_pool.exclusive_run
     end
-    
+
     private
     def load_merb_env
+      return unless File.exists?(Merb.root / "config" / "database.yml")
+
       db_config_file = YAML.load(ERB.new(IO.read("#{Merb.root}/config/database.yml")).result)
       run_env = @config_file[:backgroundrb][:environment] || 'development'
-      ActiveRecord::Base.establish_connection(db_config_file[run_env.to_sym])
-      ActiveRecord::Base.allow_concurrency = true
+
+      if defined?(ActiveRecord) then
+        ActiveRecord::Base.establish_connection(db_config_file[run_env.to_sym])
+        ActiveRecord::Base.allow_concurrency = true
+      end
     end
   end # end of class MetaWorker
 end # end of module BackgrounDRb

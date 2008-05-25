@@ -184,7 +184,7 @@ module BackgrounDRbMerb
       @reloadable_workers = t_workers.map do |x|
         worker_name = File.basename(x,".rb")
         require worker_name
-        worker_klass = Object.const_get(worker_name.classify)
+        worker_klass = Object.const_get(worker_name.camel_case)
         worker_klass.reload_flag ? worker_klass : nil
       end.compact
       @worker_triggers = { }
@@ -261,16 +261,17 @@ module BackgrounDRbMerb
       run_env = CONFIG_FILE[:backgroundrb][:environment] || 'development'
       lazy_load = CONFIG_FILE[:backgroundrb][:lazy_load].nil? ? true : CONFIG_FILE[:backgroundrb][:lazy_load].nil?
       require_merb_files unless lazy_load
-      ActiveRecord::Base.allow_concurrency = true
+      ActiveRecord::Base.allow_concurrency = true if defined?(ActiveRecord)
     end
 
     def require_merb_files
       debug_logger = DebugMaster.new(CONFIG_FILE[:backgroundrb][:log],true)
-       
+
       files = Dir["#{Merb.root}/app/models/**/*.rb"]
       files.each { |x|
+        puts "***(M) #{x}"
         begin
-          require x
+          require x unless defined? x.camel_case
         rescue LoadError
           next
         rescue MissingSourceFile

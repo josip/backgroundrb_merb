@@ -1,50 +1,49 @@
 module BackgrounDRbMerb
   class WorkerProxy
     include Packet::NbioHelper
+
     def self.init
-      @config = BackgrounDRbMerb::Config.read_config("#{BACKGROUNDRB_ROOT}/config/backgroundrb.yml")
-      @server_ip = @config[:backgroundrb][:ip]
-      @server_port = @config[:backgroundrb][:port]
+      @config       = BackgrounDRbMerb::Config.read_config("#{BACKGROUNDRB_ROOT}/config/backgroundrb.yml")
+      @server_ip    = @config[:backgroundrb][:ip]
+      @server_port  = @config[:backgroundrb][:port]
       new
     end
-  
+
     def self.server_ip; @server_ip; end
     def self.server_port; @server_port; end
-  
+
     def server_ip; self.class.server_ip; end
     def server_port; self.class.server_port; end
-  
-    def self.custom_connection(ip,port)
+
+    def self.custom_connection(ip, port)
       @server_ip = ip
       @server_port = port
       new
     end
-  
+
     def initialize
       @mutex = Mutex.new
       establish_connection
     end
-  
-    def worker(worker_name,job_key = nil)
+
+    def worker(worker_name, job_key = nil)
       BackgrounDRbMerb::MerbWorkerProxy.worker(worker_name,job_key)
     end
 
     def establish_connection
       puts " ~ Backgroundrb server: #{server_ip}:#{server_port}"
       begin
-        timeout(3) do
-          @connection = TCPSocket.open(server_ip, server_port)
-          @connection.setsockopt(Socket::IPPROTO_TCP,Socket::TCP_NODELAY,1)
-        end
+        @connection = TCPSocket.open(server_ip, server_port)
+        @connection.setsockopt(Socket::IPPROTO_TCP,Socket::TCP_NODELAY, 1)
         @connection_status = true
-      rescue Timeout::Error
-        @connection_status = false
+#       rescue Timeout::Error
+#         @connection_status = false
       rescue Exception => e
         @connection_status = false
       end
     end
-  
-    def write_data data
+
+    def write_data(data)
       begin
         flush_in_loop(data)
       rescue Errno::EAGAIN
@@ -54,21 +53,21 @@ module BackgrounDRbMerb
         if @connection_status
           flush_in_loop(data)
         else
-          raise BackgrounDRbMerb::BdrbConnError.new("Error while writing")        
+          raise BackgrounDRbMerb::BdrbConnError.new("Error while writing")
         end
       rescue
         establish_connection
         if @connection_status
           flush_in_loop(data)
         else
-          raise BackgrounDRbMerb::BdrbConnError.new("Error while writing")        
+          raise BackgrounDRbMerb::BdrbConnError.new("Error while writing")
         end
       end
     end
-  
+
     def flush_in_loop(data)
       t_length = data.length
-      loop do 
+      loop do
         break if t_length <= 0
         written_length = @connection.write(data)
         @connection.flush
@@ -76,13 +75,13 @@ module BackgrounDRbMerb
         t_length = data.length
       end
     end
-  
-    def dump_object data
+
+    def dump_object(data)
       unless @connection_status
         establish_connection
         raise BackgrounDRbMerb::BdrbConnError.new("Error while connecting to the backgroundrb server") unless @connection_status
       end
-    
+
       object_dump = Marshal.dump(data)
       dump_length = object_dump.length.to_s
       length_str = dump_length.rjust(9,'0')
@@ -90,17 +89,17 @@ module BackgrounDRbMerb
       @mutex.synchronize { write_data(final_data) }
     end
 
-    def ask_work p_data
+    def ask_work(p_data)
       p_data[:type] = :do_work
       dump_object(p_data)
     end
 
-    def new_worker p_data
+    def new_worker(p_data)
       p_data[:type] = :start_worker
       dump_object(p_data)
       p_data[:job_key]
     end
-  
+
     def worker_info(p_data)
       p_data[:type] = :worker_info
       dump_object(p_data)
@@ -108,8 +107,7 @@ module BackgrounDRbMerb
       @mutex.synchronize { bdrb_response = read_from_bdrb() }
       bdrb_response
     end
-  
-  
+
     def all_worker_info
       p_data = { }
       p_data[:type] = :all_worker_info
@@ -119,7 +117,7 @@ module BackgrounDRbMerb
       bdrb_response
     end
 
-    def delete_worker p_data
+    def delete_worker(p_data)
       p_data[:type] = :delete_worker
       dump_object(p_data)
     end
@@ -151,7 +149,7 @@ module BackgrounDRbMerb
       @mutex.synchronize { bdrb_response = read_from_bdrb() }
       bdrb_response
     end
-  
+
     def read_from_bdrb(timeout = 3)
       @tokenizer = BinParser.new
       begin
