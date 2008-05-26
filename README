@@ -9,13 +9,11 @@ Based on the 1.0.3 version of backgroundrb this is a hacked port to MERB.  Some 
       ex. #cd ~/path/to/app
           #mkdir gems
           #gem install ~/path/to/bdrb_merb.gem -i gems --no-ri --no-rdoc -l
-  (2) Create blank config/backgroundrb.yml file
-  (3) Generate new worker, so that you get correct backgroundrb.yml file
-        #cd ~/pat/to/app
-        #merb-gen worker Test
-        (You whish to overwrite config/backgroundrb.yml)
-        #rm app/workers/test_worker.rb
-        #rm spec/workers/test.rb
+  (2) Add to config/init.rb (Merb):
+      require 'backgroundrb_merb'
+  (3) Create configuration file:
+      #rake bdrb:setup
+
 == Usage
   Workers are created in app/workers
   To create new worker:
