@@ -13,6 +13,6 @@ Gem::Specification.new do |s|
   s.add_dependency('packet', '>= 0.1.5')
   s.add_dependency('chronic', '>= 0.2.3')
   s.require_path = 'lib'
-  s.autorequire = "backgroundrb_merb"
-  s.files = %w(LICENSE README Rakefile TODO) + Dir.glob("{config,generators,lib,script,server,specs}/**/*")
+#  s.autorequire = "backgroundrb_merb"  # Deprecated?
+  s.files = %w(LICENSE README Rakefile TODO) + Dir.glob("{config,generators,lib,pids,server,specs}/**/*")
 end

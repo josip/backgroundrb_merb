@@ -4,8 +4,8 @@ require 'rake/gempackagetask'
 PLUGIN = "backgroundrb_merb"
 NAME = "backgroundrb_merb"
 VERSION = "1.0.3"
-AUTHOR = "George Palmer"
-EMAIL = "george.palmer@gmail.com"
+AUTHOR = "Josip Lisec"
+EMAIL = "josiplisec@gmail.com"
 HOMEPAGE = "not yet"
 SUMMARY = "Merb plugin that provides backgroundrb"
 
@@ -24,8 +24,8 @@ spec = Gem::Specification.new do |s|
   s.add_dependency('packet', '>= 0.1.5')
   s.add_dependency('chronic', '>= 0.2.3')
   s.require_path = 'lib'
-  s.autorequire = PLUGIN
-  s.files = %w(LICENSE README Rakefile TODO) + Dir.glob("{config,generators,lib,script,server,specs}/**/*")
+#  s.autorequire = PLUGIN
+  s.files = %w(LICENSE README Rakefile TODO) + Dir.glob("{config,generatirs,lib,pids,server,specs}/**/*")
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|
