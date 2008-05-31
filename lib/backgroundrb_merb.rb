@@ -11,8 +11,7 @@ if defined?(Merb::Plugins)
     require "backgroundrb_merb/merb_worker_proxy"
 
     Merb::BootLoader.before_app_loads do
-#      BackgrounDRb  = BackgrounDRbMerb
-      MiddleMan     = BackgrounDRb::WorkerProxy.init
+      MiddleMan     = BackgrounDRbMerb::WorkerProxy.init
     end
   end
 
