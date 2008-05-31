@@ -3,7 +3,7 @@ require "pathname"
 BACKGROUNDRB_ROOT = Pathname.new(Merb.root).realpath.to_s
 
 if defined?(Merb::Plugins)
-  if File.exists?(Merb.root/"config"/"backgroundrb.yml") then
+  if File.exists?(Merb.root / "config" / "backgroundrb.yml") then
     require "packet"
     require "backgroundrb_merb/bdrb_conn_error"
     require "backgroundrb_merb/bdrb_config"
@@ -11,7 +11,8 @@ if defined?(Merb::Plugins)
     require "backgroundrb_merb/merb_worker_proxy"
 
     Merb::BootLoader.before_app_loads do
-      MiddleMan = BackgrounDRbMerb::WorkerProxy.init
+#      BackgrounDRb  = BackgrounDRbMerb
+      MiddleMan     = BackgrounDRb::WorkerProxy.init
     end
   end
 

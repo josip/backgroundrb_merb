@@ -25,7 +25,7 @@ spec = Gem::Specification.new do |s|
   s.add_dependency('chronic', '>= 0.2.3')
   s.require_path = 'lib'
 #  s.autorequire = PLUGIN
-  s.files = %w(LICENSE README Rakefile TODO) + Dir.glob("{config,generatirs,lib,pids,server,specs}/**/*")
+  s.files = %w(LICENSE README Rakefile TODO) + Dir.glob("{config,generators,lib,pids,server,specs}/**/*")
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|

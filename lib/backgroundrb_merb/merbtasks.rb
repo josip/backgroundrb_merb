@@ -1,6 +1,6 @@
 namespace :bdrb do
   require 'yaml'
-  # Gem's location
+
   BDRB_DIR = File.expand_path(File.dirname(__FILE__) + '/../../')
 
   unless File.exists?(Merb.root/"config"/"backgroundrb.yml") then
@@ -52,6 +52,7 @@ namespace :bdrb do
       task :stop do
         pid = nil
         File.open(pid_file, 'r') {|f| pid = f.gets.strip.chomp.to_i}
+
         begin
           pgid = Process.getpgid(pid)
           Process.kill('TERM', pid)
@@ -71,8 +72,6 @@ namespace :bdrb do
       task :start do
         BackgrounDRbMerb::MasterProxy.new
       end
-
-  #     exit # To avoid "don't know how to build task start/stop"
     end
 
     desc 'Remove BackgroundRB from your app'
