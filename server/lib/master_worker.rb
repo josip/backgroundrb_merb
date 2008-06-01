@@ -259,7 +259,8 @@ module BackgrounDRbMerb
 
     def load_merb_env
       run_env = CONFIG_FILE[:backgroundrb][:environment] || 'development'
-      lazy_load = CONFIG_FILE[:backgroundrb][:lazy_load].nil? ? true : CONFIG_FILE[:backgroundrb][:lazy_load].nil?
+      lazy_load = CONFIG_FILE[:backgroundrb][:lazy_load].nil? ? false : CONFIG_FILE[:backgroundrb][:lazy_load]
+
       require_merb_files unless lazy_load
       ActiveRecord::Base.allow_concurrency = true if defined?(ActiveRecord)
     end
@@ -269,9 +270,8 @@ module BackgrounDRbMerb
 
       files = Dir["#{Merb.root}/app/models/**/*.rb"]
       files.each { |x|
-        puts "***(M) #{x}"
         begin
-          require x unless defined? x.camel_case
+          require x
         rescue LoadError
           next
         rescue MissingSourceFile
